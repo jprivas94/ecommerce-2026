@@ -1,0 +1,66 @@
+import { Product } from './types';
+
+export const PRODUCTS: Product[] = [
+	{
+		id: '1',
+		name: 'Quantum Headphones',
+		description: 'High-fidelity audio with active noise cancellation and 40-hour battery life.',
+		price: 299.99,
+		category: 'Electronics',
+		image: 'https://picsum.photos/seed/hp1/600/600',
+		rating: 4.8,
+		stock: 15,
+	},
+	{
+		id: '2',
+		name: 'Minimalist Watch',
+		description: 'A sleek, titanium-cased timepiece with a scratch-resistant sapphire crystal.',
+		price: 185.0,
+		category: 'Accessories',
+		image: 'https://picsum.photos/seed/watch2/600/600',
+		rating: 4.5,
+		stock: 22,
+	},
+	{
+		id: '3',
+		name: 'Smart Desk Lamp',
+		description: 'Adjustable color temperature and brightness with built-in wireless charging.',
+		price: 79.99,
+		category: 'Home',
+		image: 'https://picsum.photos/seed/lamp3/600/600',
+		rating: 4.2,
+		stock: 45,
+	},
+	{
+		id: '4',
+		name: 'Eco-Friendly Backpack',
+		description: 'Made from 100% recycled ocean plastics. Water-resistant and modular design.',
+		price: 120.0,
+		category: 'Apparel',
+		image: 'https://picsum.photos/seed/bag4/600/600',
+		rating: 4.9,
+		stock: 10,
+	},
+	{
+		id: '5',
+		name: 'Mechanical Keyboard',
+		description: 'RGB backlit, hot-swappable switches, and ultra-low latency wireless connection.',
+		price: 159.99,
+		category: 'Electronics',
+		image: 'https://picsum.photos/seed/kb5/600/600',
+		rating: 4.7,
+		stock: 8,
+	},
+	{
+		id: '6',
+		name: 'Linen Comfort Shirt',
+		description: 'Breathable organic linen, perfect for summer days and casual evenings.',
+		price: 55.0,
+		category: 'Apparel',
+		image: 'https://picsum.photos/seed/shirt6/600/600',
+		rating: 4.4,
+		stock: 30,
+	},
+];
+
+export const CATEGORIES = ['All', 'Electronics', 'Apparel', 'Home', 'Accessories'];
