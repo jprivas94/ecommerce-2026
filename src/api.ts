@@ -1,5 +1,5 @@
 // API service for interacting with the backend
-const API_BASE_URL = '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 export interface Product {
   id: string;
