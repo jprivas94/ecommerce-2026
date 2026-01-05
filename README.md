@@ -1,4 +1,6 @@
-# Ecommerce 2026
+# Ecommerce 2026 - Frontend
+
+Frontend de la aplicación de ecommerce, desplegado en Vercel.
 
 ## Tech Stack
 
@@ -9,22 +11,36 @@
 - **Tailwind CSS** - Utility-first CSS framework (via config)
 - **Lucide React** v0.562.0 - Icon library
 
-### Backend
-- **Node.js** v20 - JavaScript runtime (via Docker)
-- **Express.js** v4.18.2 - Web framework
-- **Sequelize** v6.37.7 - ORM for database operations
-- **PostgreSQL** v16 - Relational database (via Docker)
-- **bcryptjs** v3.0.3 - Password hashing
-- **jsonwebtoken** v9.0.3 - JWT authentication
-- **express-rate-limit** v8.2.1 - API rate limiting
-- **express-validator** v7.3.1 - Input validation
-- **cors** v2.8.5 - Cross-origin resource sharing
-- **pg** v8.16.3 - PostgreSQL client
-- **dotenv** v17.2.3 - Environment variable management
-
 ### Development Tools
-- **Docker** - Containerization
-- **Docker Compose** - Multi-container orchestration
 - **ESLint** v9.39.1 - Code linting
 - **TypeScript Compiler** v5.0.0 - Type checking
-- **ts-node-dev** v1.1.8 - TypeScript development server
+
+## Instalación y Desarrollo
+
+### Prerrequisitos
+- Node.js v18+
+- npm
+
+### Instalación
+```bash
+npm install
+```
+
+### Desarrollo local
+```bash
+npm run dev
+```
+
+### Build para producción
+```bash
+npm run build
+```
+
+## Despliegue
+Este proyecto está configurado para desplegarse automáticamente en Vercel.
+
+## Backend
+El backend está separado en un repositorio independiente: [ecommerce-backend](https://github.com/tu-usuario/ecommerce-backend)
+
+## Licencia
+MIT
