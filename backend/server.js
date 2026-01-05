@@ -11,27 +11,26 @@ const { sequelize, Product, CartItem, User } = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());  // Allow all origins for testing
-app.use(express.json());
+// Configuraciones básicas del servidor
+app.use(cors());  // Permitimos conexiones desde cualquier lugar para pruebas
 
-// Log all requests
+// Registramos todas las visitas al servidor
 app.use((req, res, next) => {
   console.log('Request:', req.method, req.url);
   next();
 });
 
-// Rate limiting
+// Limitamos las visitas para evitar abusos
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 visitas por dirección IP cada 15 minutos
 });
 app.use(limiter);
 
-// Test route
-app.post('/test', (req, res) => res.send('POST works'));
+// Ruta de prueba para verificar que funciona
+app.post('/test', (req, res) => res.send('POST funciona'));
 
-// Middleware para autenticación JWT
+// Verificamos que el usuario esté logueado y tenga permiso
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -44,12 +43,12 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Database models are now used for persistence
+// Ahora usamos la base de datos para guardar la información
 
-// Routes
-console.log('Starting routes definition');
+// Definimos las rutas de la aplicación
+console.log('Empezando a definir las rutas');
 
-// Auth routes
+// Rutas para registro e inicio de sesión
 app.post('/api/auth/register', [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }),
@@ -63,30 +62,30 @@ app.post('/api/auth/register', [
   const { email, password, name } = req.body;
 
   try {
-    // Check if user already exists
+    // Verificamos si el usuario ya existe
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(409).json({ error: 'User already exists' });
+      return res.status(409).json({ error: 'El usuario ya existe' });
     }
 
-    // Hash password
+    // Protegemos la contraseña
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Creamos el nuevo usuario
     const user = await User.create({
       email,
       password: hashedPassword,
       name,
     });
 
-    // Generate JWT
+    // Generamos un pase de acceso
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // Return user info (without password) and token
+    // Devolvemos la información del usuario (sin contraseña) y el pase
     res.status(201).json({
       user: {
         id: user.id,
@@ -113,26 +112,26 @@ app.post('/api/auth/login', [
   const { email, password } = req.body;
 
   try {
-    // Find user
+    // Buscamos al usuario por email
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
-    // Check password
+    // Verificamos la contraseña
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
 
-    // Generate JWT
+    // Generamos un pase de acceso
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
-    // Return user info and token
+    // Devolvemos la información del usuario y el pase
     res.json({
       user: {
         id: user.id,
@@ -147,7 +146,7 @@ app.post('/api/auth/login', [
   }
 });
 
-// Cart routes
+// Rutas para el carrito de compras
 app.get('/api/cart', authenticateToken, async (req, res) => {
   try {
     const cartItems = await CartItem.findAll({
@@ -158,7 +157,7 @@ app.get('/api/cart', authenticateToken, async (req, res) => {
       }],
     });
 
-    // Format cart items with product details
+    // Organizamos los productos del carrito con toda su información
     const formattedCart = cartItems.map(item => ({
       id: item.Product.id,
       cartId: item.id,
@@ -192,34 +191,34 @@ app.post('/api/cart', authenticateToken, [
   const userId = req.user.id;
 
   try {
-    // Check if product exists and has stock
+    // Verificamos que el producto existe y hay suficiente stock
     const product = await Product.findByPk(productId);
     if (!product) {
-      return res.status(404).json({ error: 'Product not found' });
+      return res.status(404).json({ error: 'Producto no encontrado' });
     }
     if (product.stock < quantity) {
-      return res.status(400).json({ error: 'Insufficient stock' });
+      return res.status(400).json({ error: 'No hay suficiente stock' });
     }
 
-    // Check if item already in cart
+    // Verificamos si el producto ya está en el carrito
     const existingItem = await CartItem.findOne({
       where: { userId, productId },
     });
 
     if (existingItem) {
-      // Update quantity
+      // Sumamos la cantidad
       const newQuantity = existingItem.quantity + quantity;
       if (product.stock < newQuantity) {
-        return res.status(400).json({ error: 'Insufficient stock for total quantity' });
+        return res.status(400).json({ error: 'No hay suficiente stock para la cantidad total' });
       }
       existingItem.quantity = newQuantity;
       await existingItem.save();
     } else {
-      // Create new cart item
+      // Agregamos el producto al carrito
       await CartItem.create({ userId, productId, quantity });
     }
 
-    // Return updated cart
+    // Devolvemos el carrito actualizado
     const updatedCart = await CartItem.findAll({
       where: { userId },
       include: [{ model: Product }],
@@ -345,26 +344,26 @@ app.post('/api/cart/checkout', authenticateToken, async (req, res) => {
   const userId = req.user.id;
 
   try {
-    // Get all cart items with products
+    // Obtenemos todos los productos del carrito
     const cartItems = await CartItem.findAll({
       where: { userId },
       include: [{ model: Product }],
     });
 
     if (cartItems.length === 0) {
-      return res.status(400).json({ error: 'Cart is empty' });
+      return res.status(400).json({ error: 'El carrito está vacío' });
     }
 
-    // Validate stock for all items
+    // Verificamos el stock de todos los productos
     for (const item of cartItems) {
       if (item.Product.stock < item.quantity) {
         return res.status(400).json({
-          error: `Insufficient stock for ${item.Product.name}. Available: ${item.Product.stock}, requested: ${item.quantity}`
+          error: `No hay suficiente stock para ${item.Product.name}. Disponible: ${item.Product.stock}, solicitado: ${item.quantity}`
         });
       }
     }
 
-    // Calculate total and prepare order summary
+    // Calculamos el total y preparamos el resumen del pedido
     const orderSummary = cartItems.map(item => ({
       productId: item.productId,
       name: item.Product.name,
@@ -375,13 +374,13 @@ app.post('/api/cart/checkout', authenticateToken, async (req, res) => {
 
     const total = orderSummary.reduce((sum, item) => sum + item.total, 0);
 
-    // Update product stock
+    // Actualizamos el stock de los productos
     for (const item of cartItems) {
       item.Product.stock -= item.quantity;
       await item.Product.save();
     }
 
-    // Clear cart
+    // Vaciamos el carrito
     await CartItem.destroy({ where: { userId } });
 
     res.json({
@@ -395,7 +394,7 @@ app.post('/api/cart/checkout', authenticateToken, async (req, res) => {
   }
 });
 
-// Get all products
+// Obtener todos los productos
 app.get('/api/products', async (req, res) => {
   try {
     const products = await Product.findAll();
@@ -405,7 +404,7 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// Get single product
+// Obtener un producto específico
 app.get('/api/products/:id', async (req, res) => {
   try {
     const product = await Product.findByPk(req.params.id);
@@ -418,7 +417,7 @@ app.get('/api/products/:id', async (req, res) => {
   }
 });
 
-// Get products by category
+// Obtener productos por categoría
 app.get('/api/products/category/:category', async (req, res) => {
   try {
     const category = req.params.category;
@@ -430,7 +429,7 @@ app.get('/api/products/category/:category', async (req, res) => {
   }
 });
 
-// Search products
+// Buscar productos
 app.get('/api/products/search/:query', async (req, res) => {
   try {
     const query = req.params.query.toLowerCase();
@@ -448,29 +447,29 @@ app.get('/api/products/search/:query', async (req, res) => {
   }
 });
 
-// Health check
+// Verificar que el servidor está funcionando
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-console.log('All routes defined');
+console.log('Todas las rutas definidas');
 
-console.log('Starting database sync...');
+console.log('Sincronizando la base de datos...');
 sequelize.sync().then(async () => {
   console.log('Database synced successfully');
-  // Seed users if empty
+  // Agregamos usuarios de prueba si no hay ninguno
   const existingUsers = await User.findAll();
   if (existingUsers.length === 0) {
-    console.log('Seeding users...');
+    console.log('Agregando usuarios de prueba...');
     const hashedPassword = await bcrypt.hash('password123', 10);
     await User.bulkCreate([
-      { email: 'user1@example.com', password: hashedPassword, name: 'User One' },
-      { email: 'user2@example.com', password: hashedPassword, name: 'User Two' },
+      { email: 'user1@example.com', password: hashedPassword, name: 'Usuario Uno' },
+      { email: 'user2@example.com', password: hashedPassword, name: 'Usuario Dos' },
     ]);
-    console.log('Users seeded');
+    console.log('Usuarios agregados');
   }
 
-  // Seed products if empty
+  // Agregamos productos de prueba si no hay ninguno
   const existingProducts = await Product.findAll();
   if (existingProducts.length === 0) {
     await Product.bulkCreate([

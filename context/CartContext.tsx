@@ -28,7 +28,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 		}
 	}, [user, token]);
 
-	// useOptimistic permite actualizar la UI antes de que termine la operación asíncrona
+	// useOptimistic nos permite mostrar cambios inmediatos en la pantalla antes de que el servidor responda
 	const [optimisticCart, addOptimisticItem] = useOptimistic(cart, (state: CartItem[], newProduct: Product) => {
 		const existing = state.find((item) => item.id === newProduct.id);
 		if (existing) {
@@ -40,14 +40,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 	const addToCart = async (product: Product) => {
 		if (!token) throw new Error('Must be logged in to add to cart');
 
-		// 1. Actualización optimista inmediata
+		// 1. Mostramos el cambio inmediatamente en la pantalla
 		addOptimisticItem(product);
 
 		try {
-			// 2. Llamada a la API
+			// 2. Enviamos la solicitud al servidor
 			const updatedCart = await cartAPI.addToCart(product.id);
 
-			// 3. Actualización real del estado con datos del servidor
+			// 3. Actualizamos con la información real del servidor
 			setCart(updatedCart);
 		} catch (error) {
 			console.error('Error adding to cart:', error);
@@ -55,7 +55,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 		}
 	};
 
-	const updateQuantity = async (cartId: string, delta: number) => {
+	const updateQuantity = async (cartId: string, delta: number) => { // delta es +1 o -1 para aumentar/disminuir
 		try {
 			const item = cart.find(item => item.cartId === cartId);
 			if (!item) return;
@@ -86,7 +86,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
 	const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
 
-	// En React 19 ya no es necesario .Provider, se usa directamente el Context
+	// En React 19 ya no necesitamos .Provider, usamos el Context directamente
 	return (
 		<CartContext
 			value={{
