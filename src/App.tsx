@@ -1,33 +1,76 @@
-import React, { useState, useMemo, Suspense } from 'react';
+import React, { useState, useMemo, Suspense, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import ProductCard from '../components/ProductCard';
 import CartDrawer from '../components/CartDrawer';
+import AuthModal from '../components/AuthModal';
 // import AssistantChat from './components/AssistantChat';
-import { PRODUCTS, CATEGORIES } from '../constants';
-import { type Category } from '../types';
+import { CATEGORIES } from '../constants';
+import { type Category, type Product } from '../types';
 import { Filter, Loader2 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { productsAPI } from './api';
 
 const App: React.FC = () => {
-	const { cartCount, optimisticCart, updateQuantity, removeFromCart } = useCart();
+	const { cartCount, optimisticCart, updateQuantity, removeFromCart, addToCart, checkout } = useCart();
+	const { user, logout } = useAuth();
 	const [isCartOpen, setIsCartOpen] = useState(false);
+	const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+	const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 	const [activeCategory, setActiveCategory] = useState<Category>('All');
 	const [searchTerm, setSearchTerm] = useState('');
+	const [products, setProducts] = useState<Product[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+
+	const refetchProducts = async () => {
+		try {
+			const data = await productsAPI.getAll();
+			setProducts(data);
+		} catch (err) {
+			console.error('Error refetching products:', err);
+		}
+	};
+
+	// Fetch products on component mount
+	useEffect(() => {
+		const fetchProducts = async () => {
+			try {
+				const data = await productsAPI.getAll();
+				setProducts(data);
+			} catch (err) {
+				setError('Failed to load products');
+				console.error('Error fetching products:', err);
+			} finally {
+				setLoading(false);
+			}
+		};
+
+		fetchProducts();
+	}, []);
 
 	const filteredProducts = useMemo(() => {
-		return PRODUCTS.filter((product) => {
+		return products.filter((product) => {
 			const matchesCategory = activeCategory === 'All' || product.category === activeCategory;
 			const matchesSearch =
 				product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
 				product.description.toLowerCase().includes(searchTerm.toLowerCase());
 			return matchesCategory && matchesSearch;
 		});
-	}, [activeCategory, searchTerm]);
+	}, [products, activeCategory, searchTerm]);
 
 	return (
 		<div className="min-h-screen flex flex-col bg-slate-50 w-full overflow-x-hidden">
 			{/* Navbar ocupa el 100% de ancho con contenido centrado */}
-			<Navbar cartCount={cartCount} onCartClick={() => setIsCartOpen(true)} onSearch={setSearchTerm} />
+			<Navbar
+				cartCount={cartCount}
+				onCartClick={() => user ? setIsCartOpen(true) : setIsAuthModalOpen(true)}
+				onSearch={setSearchTerm}
+				user={user}
+				onLoginClick={() => { setAuthMode('login'); setIsAuthModalOpen(true); }}
+				onLogout={logout}
+			/>
 
 			{/* Contenedor principal alineado con el Navbar */}
 			<main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 animate-fade-in">
@@ -92,38 +135,58 @@ const App: React.FC = () => {
 				</div>
 
 				{/* Grid de Productos - Alineación centrada automática */}
-				<Suspense
-					fallback={
-						<div className="h-64 flex items-center justify-center">
-							<Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+				{loading ? (
+					<div className="h-64 flex items-center justify-center">
+						<Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
+					</div>
+				) : error ? (
+					<div className="py-24 flex flex-col items-center justify-center text-center">
+						<div className="p-8 bg-red-100 border border-red-200 rounded-[2.5rem] mb-6 shadow-sm">
+							<span className="text-red-500 text-4xl">⚠️</span>
 						</div>
-					}
-				>
-					{filteredProducts.length > 0 ? (
-						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
-							{filteredProducts.map((product) => (
-								<ProductCard key={product.id} product={product} />
-							))}
-						</div>
-					) : (
-						<div className="py-24 flex flex-col items-center justify-center text-center">
-							<div className="p-8 bg-white border border-slate-200 rounded-[2.5rem] mb-6 shadow-sm">
-								<Filter className="h-16 w-16 text-slate-200" />
+						<h3 className="text-2xl font-bold text-slate-800 mb-2">Error al cargar productos</h3>
+						<p className="text-slate-500 mb-6">{error}</p>
+						<button
+							onClick={() => window.location.reload()}
+							className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+						>
+							Reintentar
+						</button>
+					</div>
+				) : (
+					<Suspense
+						fallback={
+							<div className="h-64 flex items-center justify-center">
+								<Loader2 className="h-10 w-10 animate-spin text-indigo-600" />
 							</div>
-							<h3 className="text-2xl font-bold text-slate-800 mb-2">Sin coincidencias</h3>
-							<p className="text-slate-500 mb-6">Prueba ajustando tus filtros o términos de búsqueda.</p>
-							<button
-								onClick={() => {
-									setActiveCategory('All');
-									setSearchTerm('');
-								}}
-								className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-							>
-								Restablecer todo
-							</button>
-						</div>
-					)}
-				</Suspense>
+						}
+					>
+						{filteredProducts.length > 0 ? (
+							<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 lg:gap-10">
+								{filteredProducts.map((product) => (
+									<ProductCard key={product.id} product={product} onAddToCart={user ? addToCart : () => setIsAuthModalOpen(true)} />
+								))}
+							</div>
+						) : (
+							<div className="py-24 flex flex-col items-center justify-center text-center">
+								<div className="p-8 bg-white border border-slate-200 rounded-[2.5rem] mb-6 shadow-sm">
+									<Filter className="h-16 w-16 text-slate-200" />
+								</div>
+								<h3 className="text-2xl font-bold text-slate-800 mb-2">Sin coincidencias</h3>
+								<p className="text-slate-500 mb-6">Prueba ajustando tus filtros o términos de búsqueda.</p>
+								<button
+									onClick={() => {
+										setActiveCategory('All');
+										setSearchTerm('');
+									}}
+									className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+								>
+									Restablecer todo
+								</button>
+							</div>
+						)}
+					</Suspense>
+				)}
 			</main>
 
 			{/* Footer ocupa el 100% con contenido alineado */}
@@ -200,7 +263,36 @@ const App: React.FC = () => {
 				items={optimisticCart}
 				onUpdateQuantity={updateQuantity}
 				onRemove={removeFromCart}
+				onCheckout={checkout}
+				onCheckoutSuccess={() => {
+					setIsCartOpen(false);
+					setCheckoutSuccess(true);
+					refetchProducts(); // Update product stock in UI
+				}}
 			/>
+
+			<AuthModal
+				isOpen={isAuthModalOpen}
+				onClose={() => setIsAuthModalOpen(false)}
+				mode={authMode}
+				onSwitchMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+			/>
+
+			{/* Checkout Success Modal */}
+			{checkoutSuccess && (
+				<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+					<div className="bg-white rounded-3xl p-8 max-w-md w-full mx-4 text-center">
+						<h2 className="text-2xl font-bold text-gray-900 mb-4">¡Felicidades por su compra!</h2>
+						<p className="text-gray-600 mb-6">Su pedido ha sido procesado exitosamente.</p>
+						<button
+							onClick={() => setCheckoutSuccess(false)}
+							className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700"
+						>
+							Continuar comprando
+						</button>
+					</div>
+				</div>
+			)}
 
 			{/* <AssistantChat cartItems={optimisticCart} /> */}
 		</div>

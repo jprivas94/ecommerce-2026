@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Minus, Plus, ShoppingBag, ArrowRight } from 'lucide-react';
-import { CartItem } from '../types';
+import type { CartItem } from '../types';
+import { cartAPI } from '../src/api';
 
 interface CartDrawerProps {
 	isOpen: boolean;
@@ -8,10 +9,31 @@ interface CartDrawerProps {
 	items: CartItem[];
 	onUpdateQuantity: (id: string, delta: number) => void;
 	onRemove: (id: string) => void;
+	onCheckout?: () => Promise<{ message: string; orderSummary: any[]; total: number }>;
+	onCheckoutSuccess?: () => void;
 }
 
-const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdateQuantity, onRemove }) => {
+const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdateQuantity, onRemove, onCheckout, onCheckoutSuccess }) => {
+	const [checkoutLoading, setCheckoutLoading] = useState(false);
+	const [checkoutError, setCheckoutError] = useState('');
 	const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+	const handleCheckout = async () => {
+		setCheckoutLoading(true);
+		setCheckoutError('');
+		try {
+			if (onCheckout) {
+				await onCheckout();
+			} else {
+				await cartAPI.checkout();
+			}
+			onCheckoutSuccess?.();
+		} catch (error: any) {
+			setCheckoutError(error.message || 'Checkout failed');
+		} finally {
+			setCheckoutLoading(false);
+		}
+	};
 
 	if (!isOpen) return null;
 
@@ -64,21 +86,21 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdat
 													<div className="flex-1 flex items-end justify-between text-sm">
 														<div className="flex items-center border border-slate-200 rounded-lg bg-slate-50">
 															<button
-																onClick={() => onUpdateQuantity(item.id, -1)}
+																onClick={() => onUpdateQuantity(item.cartId!, -1)}
 																className="p-1 hover:text-indigo-600 transition-colors"
 															>
 																<Minus className="h-4 w-4" />
 															</button>
 															<span className="px-3 font-medium">{item.quantity}</span>
 															<button
-																onClick={() => onUpdateQuantity(item.id, 1)}
+																onClick={() => onUpdateQuantity(item.cartId!, 1)}
 																className="p-1 hover:text-indigo-600 transition-colors"
 															>
 																<Plus className="h-4 w-4" />
 															</button>
 														</div>
 														<button
-															onClick={() => onRemove(item.id)}
+															onClick={() => onRemove(item.cartId!)}
 															className="font-medium text-red-500 hover:text-red-600"
 														>
 															Eliminar
@@ -102,9 +124,16 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ isOpen, onClose, items, onUpdat
 								<p className="mt-0.5 text-sm text-slate-500 mb-6">
 									Envio y taxes estan calculados al finalizar la compra.
 								</p>
-								<button className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transition-all">
-									Checkout <ArrowRight className="ml-2 h-5 w-5" />
+								<button
+									onClick={handleCheckout}
+									disabled={checkoutLoading}
+									className="w-full flex items-center justify-center px-6 py-3 border border-transparent rounded-xl shadow-sm text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 disabled:cursor-not-allowed transition-all"
+								>
+									{checkoutLoading ? 'Processing...' : 'Checkout'} <ArrowRight className="ml-2 h-5 w-5" />
 								</button>
+								{checkoutError && (
+									<p className="mt-2 text-sm text-red-600 text-center">{checkoutError}</p>
+								)}
 							</div>
 						)}
 					</div>

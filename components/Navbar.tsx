@@ -1,13 +1,15 @@
-import React from 'react';
-import { ShoppingCart, Search, Menu, User } from 'lucide-react';
+import { ShoppingCart, Search } from 'lucide-react';
 
 interface NavbarProps {
 	cartCount: number;
 	onCartClick: () => void;
 	onSearch: (term: string) => void;
+	user?: { name: string; email: string } | null;
+	onLoginClick?: () => void;
+	onLogout?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartClick, onSearch }) => {
+const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartClick, onSearch, user, onLoginClick, onLogout }) => {
 	return (
 		<nav className="sticky top-0 z-40 glass-effect border-b border-slate-200">
 			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,9 +38,26 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartClick, onSearch }) => 
 
 					{/* Right Side Icons */}
 					<div className="flex items-center space-x-4">
-						<button className="p-2 text-slate-500 hover:text-indigo-600 transition-colors">
-							<User className="h-6 w-6" />
-						</button>
+						{/* Auth buttons */}
+						{user ? (
+							<div className="flex items-center space-x-4">
+								<span className="text-white text-sm">Hola, {user.name}</span>
+								<button
+									onClick={onLogout}
+									className="px-4 py-2 bg-white text-slate-900 rounded-full text-sm font-bold hover:bg-gray-100 transition-colors"
+								>
+									Cerrar Sesión
+								</button>
+							</div>
+						) : (
+							<button
+								onClick={onLoginClick}
+								className="px-4 py-2 bg-white text-slate-900 rounded-full text-sm font-bold hover:bg-gray-100 transition-colors"
+							>
+								Iniciar Sesión
+							</button>
+						)}
+
 						<button
 							onClick={onCartClick}
 							className="relative p-2 text-slate-500 hover:text-indigo-600 transition-colors"
@@ -49,9 +68,6 @@ const Navbar: React.FC<NavbarProps> = ({ cartCount, onCartClick, onSearch }) => 
 									{cartCount}
 								</span>
 							)}
-						</button>
-						<button className="md:hidden p-2 text-slate-500 hover:text-indigo-600 transition-colors">
-							<Menu className="h-6 w-6" />
 						</button>
 					</div>
 				</div>

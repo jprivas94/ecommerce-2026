@@ -11,6 +11,7 @@ export interface Product {
 
 export interface CartItem extends Product {
 	quantity: number;
+	cartId?: string;
 }
 
 export interface ChatMessage {

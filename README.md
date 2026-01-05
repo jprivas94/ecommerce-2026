@@ -1,73 +1,30 @@
-# React + TypeScript + Vite
+# Ecommerce 2026
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Tech Stack
 
-Currently, two official plugins are available:
+### Frontend
+- **React** v19.2.0 - UI library with hooks
+- **TypeScript** v5.9.3 - Type-safe JavaScript
+- **Vite** v7.2.4 - Fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework (via config)
+- **Lucide React** v0.562.0 - Icon library
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Backend
+- **Node.js** v20 - JavaScript runtime (via Docker)
+- **Express.js** v4.18.2 - Web framework
+- **Sequelize** v6.37.7 - ORM for database operations
+- **PostgreSQL** v16 - Relational database (via Docker)
+- **bcryptjs** v3.0.3 - Password hashing
+- **jsonwebtoken** v9.0.3 - JWT authentication
+- **express-rate-limit** v8.2.1 - API rate limiting
+- **express-validator** v7.3.1 - Input validation
+- **cors** v2.8.5 - Cross-origin resource sharing
+- **pg** v8.16.3 - PostgreSQL client
+- **dotenv** v17.2.3 - Environment variable management
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Development Tools
+- **Docker** - Containerization
+- **Docker Compose** - Multi-container orchestration
+- **ESLint** v9.39.1 - Code linting
+- **TypeScript Compiler** v5.0.0 - Type checking
+- **ts-node-dev** v1.1.8 - TypeScript development server
