@@ -85,7 +85,7 @@ const App: React.FC = () => {
 
 					<div className="relative z-10 px-8 sm:px-16 text-white max-w-3xl">
 						<span className="inline-block bg-indigo-600 text-[10px] font-black tracking-[0.2em] px-3 py-1 rounded-md mb-6 uppercase">
-							Tendencias 2024
+							Tendencias 2026
 						</span>
 						<h1 className="text-5xl sm:text-7xl font-black mb-6 tracking-tighter leading-[0.9]">
 							Estilo que <br />
